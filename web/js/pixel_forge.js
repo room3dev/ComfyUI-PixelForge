@@ -18,19 +18,20 @@ app.registerExtension({
             const onNodeCreated = nodeType.prototype.onNodeCreated;
             nodeType.prototype.onNodeCreated = function () {
                 const r = onNodeCreated ? onNodeCreated.apply(this, arguments) : undefined;
-                console.log("PixelForge: Node created, initializing dropdown logic");
 
                 const aspectWidget = this.widgets.find(w => w.name === "aspect_ratio");
+                const orientationWidget = this.widgets.find(w => w.name === "orientation");
                 const divisibleWidget = this.widgets.find(w => w.name === "divisible_by");
                 const mpLimitWidget = this.widgets.find(w => w.name === "max_megapixels");
                 const resolutionWidget = this.widgets.find(w => w.name === "resolution");
-                resolutionWidget.options = { values: [] };
+
+                if (!resolutionWidget.options) resolutionWidget.options = { values: [] };
 
                 const updateResolutions = () => {
                     const aspect = aspectWidget.value;
+                    const orientation = orientationWidget.value;
                     const div = parseInt(divisibleWidget.value);
                     const maxMp = parseInt(mpLimitWidget.value.split(" ")[0]);
-                    console.log("PixelForge: Updating resolutions for aspect:", aspect, "divisible by:", div, "max MP:", maxMp);
 
                     const ratio = ASPECT_RATIOS[aspect];
                     if (!ratio) return;
@@ -42,11 +43,15 @@ app.registerExtension({
                     let k = div;
 
                     while (true) {
-                        const w = ratio_w * k;
-                        const h = ratio_h * k;
+                        let w = ratio_w * k;
+                        let h = ratio_h * k;
                         const total = w * h;
 
                         if (total > maxPixels) break;
+
+                        if (orientation === "portrait") {
+                            [w, h] = [h, w];
+                        }
 
                         resolutions.push(`${w}×${h}`);
                         k += div;
@@ -59,7 +64,7 @@ app.registerExtension({
                     // Update the widget options
                     resolutionWidget.options.values = resolutions;
 
-                    // If current value is not in the new list, pick the closest one or the first one
+                    // If current value is not in the new list, pick the first one
                     if (!resolutions.includes(resolutionWidget.value)) {
                         resolutionWidget.value = resolutions[0];
                     }
@@ -70,8 +75,9 @@ app.registerExtension({
                 };
 
                 // Add callbacks to trigger update
-                const widgetsToWatch = [aspectWidget, divisibleWidget, mpLimitWidget];
+                const widgetsToWatch = [aspectWidget, orientationWidget, divisibleWidget, mpLimitWidget];
                 widgetsToWatch.forEach(widget => {
+                    if (!widget) return;
                     const callback = widget.callback;
                     widget.callback = function () {
                         const result = callback ? callback.apply(this, arguments) : undefined;
@@ -81,9 +87,21 @@ app.registerExtension({
                 });
 
                 // Initial update
-                updateResolutions();
+                setTimeout(() => updateResolutions(), 10);
 
                 return r;
+            };
+
+            // Ensure it updates when workflow is loaded
+            nodeType.prototype.onConfigure = function () {
+                setTimeout(() => {
+                    const resolutionWidget = this.widgets.find(w => w.name === "resolution");
+                    if (resolutionWidget && this.widgets.find(w => w.name === "aspect_ratio")) {
+                        // Trigger update after a short delay to ensure all values are loaded
+                        const updateResolutions = this.widgets.find(w => w.name === "aspect_ratio").callback;
+                        if (updateResolutions) updateResolutions();
+                    }
+                }, 100);
             };
         }
     }
