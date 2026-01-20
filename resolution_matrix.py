@@ -4,7 +4,7 @@ class PixelForge:
     DESCRIPTION = "A ComfyUI node for selecting mathematically valid image resolutions filtered by aspect ratio, orientation, and megapixel limit."
 
     """
-    PixelForge Resolution Matrix
+    PixelForge Resolution Selector
     A ComfyUI node for selecting mathematically valid resolutions
     filtered by aspect ratio, divisibility, orientation, and megapixel limit.
     """
@@ -143,5 +143,5 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "PixelForge": "PixelForge · Resolution Matrix"
+    "PixelForge": "PixelForge · Resolution Selector"
 }
