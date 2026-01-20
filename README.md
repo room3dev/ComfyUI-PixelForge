@@ -1,4 +1,4 @@
-# PixelForge Resolution Matrix
+# PixelForge · Custom Nodes for ComfyUI
 
 A ComfyUI custom node for selecting mathematically valid image resolutions.
 
