@@ -9,7 +9,8 @@ A ComfyUI custom node for selecting mathematically valid image resolutions.
 - Divisibility constraints (16 / 32 / 64)
 - Max megapixel limit  
   - 1 MP = 1024 × 1024 = 1,048,576 pixels
-- Dynamically filtered resolution dropdown
+- **Real-time filtered resolution dropdown** (New!)
+  - Resolultions update instantly when parameters are changed.
 - Outputs:
   - Width (px)
   - Height (px)
