@@ -1,0 +1,10 @@
+.github/workflows/publish.yml
+.gitignore
+LICENSE
+README.md
+__init__.py
+node_preview.png
+pyproject.toml
+resolution_selector.py
+test_resolution_selector.py
+web/js/resolution_selector.js
