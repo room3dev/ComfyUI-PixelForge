@@ -52,10 +52,17 @@ app.registerExtension({
 
             console.log("PixelForge: updateResolutions called with:", { aspect, orientation, div, maxMp });
 
-            // Auto-select "square" orientation for 1:1 aspect ratio
-            if (aspect === "1:1" && orientationWidget && orientation !== "square") {
-                orientationWidget.value = "square";
-                console.log("PixelForge: Auto-selected square orientation for 1:1 ratio");
+            // Auto-adjust orientation based on aspect ratio
+            if (orientationWidget) {
+                if (aspect === "1:1" && orientation !== "square") {
+                    // For 1:1, force square orientation
+                    orientationWidget.value = "square";
+                    console.log("PixelForge: Auto-selected square orientation for 1:1 ratio");
+                } else if (aspect !== "1:1" && orientation === "square") {
+                    // For non-1:1 ratios, if currently square, switch to landscape
+                    orientationWidget.value = "landscape";
+                    console.log("PixelForge: Auto-switched from square to landscape for non-1:1 ratio");
+                }
             }
 
             const ratio = ASPECT_RATIOS[aspect];
