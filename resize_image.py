@@ -123,7 +123,14 @@ Combines PixelForge resolution selection with KJNodes Resize v2 features.
     def resize(self, image, aspect_ratio, orientation, divisible_by, max_megapixels, resolution, 
                upscale_method, keep_proportion, pad_color, crop_position, mask=None):
         
+        from comfy.utils import ProgressBar
+        
         B, H, W, C = image.shape
+        
+        # Initialize progress bar for large batches
+        pbar = None
+        if B >= 100:
+            pbar = ProgressBar(B)
         
         # Parse target resolution from PixelForge parameters
         target_width, target_height = map(int, resolution.split("×"))
@@ -227,34 +234,81 @@ Combines PixelForge resolution selection with KJNodes Resize v2 features.
             width = target_width
             height = target_height
         
-        # Resize image
-        resized_image = common_upscale(
-            image.movedim(-1, 1),
-            width,
-            height,
-            upscale_method,
-            crop="disabled"
-        ).movedim(1, -1)
         
-        # Resize mask if present
-        resized_mask = None
-        if mask is not None:
-            if upscale_method == "lanczos":
-                resized_mask = common_upscale(
-                    mask.unsqueeze(1).repeat(1, 3, 1, 1),
+        # Process images with progress tracking for large batches
+        if pbar is not None:
+            # Process images one by one for progress tracking
+            resized_images = []
+            resized_masks = []
+            
+            for i in range(B):
+                single_image = image[i:i+1]
+                single_mask = mask[i:i+1] if mask is not None else None
+                
+                # Resize single image
+                resized_single = common_upscale(
+                    single_image.movedim(-1, 1),
                     width,
                     height,
                     upscale_method,
                     crop="disabled"
-                ).movedim(1, -1)[:, :, :, 0]
-            else:
-                resized_mask = common_upscale(
-                    mask.unsqueeze(1),
-                    width,
-                    height,
-                    upscale_method,
-                    crop="disabled"
-                ).squeeze(1)
+                ).movedim(1, -1)
+                resized_images.append(resized_single)
+                
+                # Resize mask if present
+                if single_mask is not None:
+                    if upscale_method == "lanczos":
+                        resized_single_mask = common_upscale(
+                            single_mask.unsqueeze(1).repeat(1, 3, 1, 1),
+                            width,
+                            height,
+                            upscale_method,
+                            crop="disabled"
+                        ).movedim(1, -1)[:, :, :, 0]
+                    else:
+                        resized_single_mask = common_upscale(
+                            single_mask.unsqueeze(1),
+                            width,
+                            height,
+                            upscale_method,
+                            crop="disabled"
+                        ).squeeze(1)
+                    resized_masks.append(resized_single_mask)
+                
+                pbar.update(1)
+            
+            resized_image = torch.cat(resized_images, dim=0)
+            resized_mask = torch.cat(resized_masks, dim=0) if resized_masks else None
+        else:
+            # Process entire batch at once for small batches
+            resized_image = common_upscale(
+                image.movedim(-1, 1),
+                width,
+                height,
+                upscale_method,
+                crop="disabled"
+            ).movedim(1, -1)
+            
+            # Resize mask if present
+            resized_mask = None
+            if mask is not None:
+                if upscale_method == "lanczos":
+                    resized_mask = common_upscale(
+                        mask.unsqueeze(1).repeat(1, 3, 1, 1),
+                        width,
+                        height,
+                        upscale_method,
+                        crop="disabled"
+                    ).movedim(1, -1)[:, :, :, 0]
+                else:
+                    resized_mask = common_upscale(
+                        mask.unsqueeze(1),
+                        width,
+                        height,
+                        upscale_method,
+                        crop="disabled"
+                    ).squeeze(1)
+
         
         # Apply padding if needed
         if (keep_proportion in ["pad", "pad_edge"]) and (pad_left > 0 or pad_right > 0 or pad_top > 0 or pad_bottom > 0):
