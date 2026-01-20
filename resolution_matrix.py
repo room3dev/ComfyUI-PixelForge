@@ -19,20 +19,17 @@ class PixelForge:
 
     MP_BASE = 1024 * 1024  # 1 MP = 1,048,576 pixels
 
-    # --- cached inputs for filtered dropdown (ComfyUI pattern) ---
-    _last_aspect = "3:2"
-    _last_divisible = 16
-    _last_max_mp = 4
-
     @classmethod
     def INPUT_TYPES(cls):
-        resolutions = cls._build_resolution_list()
+        # Generate ALL possible resolutions across all combinations
+        # JavaScript will filter them dynamically based on user selections
+        all_resolutions = cls._build_all_resolutions()
 
         return {
             "required": {
                 "aspect_ratio": (
                     list(cls.ASPECT_RATIOS.keys()),
-                    {"default": cls._last_aspect},
+                    {"default": "3:2"},
                 ),
                 "orientation": (
                     ["landscape", "portrait"],
@@ -40,18 +37,19 @@ class PixelForge:
                 ),
                 "divisible_by": (
                     [16, 32, 64],
-                    {"default": cls._last_divisible},
+                    {"default": 16},
                 ),
                 "max_megapixels": (
                     ["1 MP", "2 MP", "4 MP", "6 MP", "8 MP", "12 MP", "16 MP"],
-                    {"default": f"{cls._last_max_mp} MP"},
+                    {"default": "4 MP"},
                 ),
-                "resolution": (resolutions,),
+                "resolution": (all_resolutions, {"default": "1024×1024"}),
             }
         }
 
     @classmethod
     def VALIDATE_INPUTS(cls, **kwargs):
+        # Accept any resolution string - JavaScript handles the filtering
         return True
 
     RETURN_TYPES = ("INT", "INT", "INT", "INT", "STRING", "FLOAT")
@@ -70,31 +68,41 @@ class PixelForge:
     # ------------------------------------------------------------
 
     @classmethod
-    def _build_resolution_list(cls):
-        ratio_w, ratio_h = cls.ASPECT_RATIOS[cls._last_aspect]
-        max_pixels = cls._last_max_mp * cls.MP_BASE
-        div = cls._last_divisible
-
-        resolutions = []
-        k = div
-
-        while True:
-            w = ratio_w * k
-            h = ratio_h * k
-            total = w * h
-
-            if total > max_pixels:
-                break
-
-            mp = total / cls.MP_BASE
-            resolutions.append(f"{w}×{h}")
-
-            k += div
-
-        if not resolutions:
-            resolutions.append("INVALID")
-
-        return resolutions
+    def _build_all_resolutions(cls):
+        """Generate all possible resolutions across all aspect ratios and settings."""
+        unique_resolutions = set()
+        
+        # Iterate through all combinations
+        for aspect_name, (ratio_w, ratio_h) in cls.ASPECT_RATIOS.items():
+            for div in [16, 32, 64]:
+                for max_mp in [1, 2, 4, 6, 8, 12, 16]:
+                    max_pixels = max_mp * cls.MP_BASE
+                    k = div
+                    
+                    while True:
+                        w = ratio_w * k
+                        h = ratio_h * k
+                        total = w * h
+                        
+                        if total > max_pixels:
+                            break
+                        
+                        # Add both landscape and portrait orientations
+                        unique_resolutions.add(f"{w}×{h}")
+                        unique_resolutions.add(f"{h}×{w}")
+                        
+                        k += div
+        
+        # Sort by total pixels for better UX
+        sorted_resolutions = sorted(
+            unique_resolutions,
+            key=lambda r: (
+                int(r.split("×")[0]) * int(r.split("×")[1]),  # total pixels
+                int(r.split("×")[0])  # width
+            )
+        )
+        
+        return sorted_resolutions if sorted_resolutions else ["1024×1024"]
 
     def forge(
         self,
@@ -104,16 +112,15 @@ class PixelForge:
         max_megapixels,
         resolution,
     ):
-        # ---- update cache for dynamic dropdown ----
-        PixelForge._last_aspect = aspect_ratio
-        PixelForge._last_divisible = divisible_by
-        PixelForge._last_max_mp = int(max_megapixels.split()[0])
-
         ratio_w, ratio_h = self.ASPECT_RATIOS[aspect_ratio]
 
         width, height = map(int, resolution.split("×"))
 
-        if orientation == "portrait":
+        # Note: Orientation is already handled by the JavaScript selecting
+        # the appropriate dimension order, but we keep this for safety
+        if orientation == "portrait" and width > height:
+            width, height = height, width
+        elif orientation == "landscape" and width < height:
             width, height = height, width
 
         total_mp = (width * height) / self.MP_BASE
