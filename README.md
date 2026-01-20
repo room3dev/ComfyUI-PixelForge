@@ -2,6 +2,8 @@
 
 A ComfyUI custom node for selecting mathematically valid image resolutions.
 
+![PixelForge Example](example.png)
+
 ## Features
 
 ### PixelForge · Resolution Selector
