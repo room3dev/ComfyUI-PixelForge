@@ -9,9 +9,10 @@ app.registerExtension({
     async nodeCreated(node) {
         console.log("PixelForge: nodeCreated called for", node.comfyClass);
 
-        if (node.comfyClass !== "PixelForge") return;
+        // Handle both Resolution Selector and Resize Image nodes
+        if (node.comfyClass !== "PixelForge" && node.comfyClass !== "PixelForgeResizeImage") return;
 
-        console.log("PixelForge: Initializing PixelForge node");
+        console.log("PixelForge: Initializing", node.comfyClass, "node");
 
         const ASPECT_RATIOS = {
             "1:1": [1, 1],
@@ -126,9 +127,10 @@ app.registerExtension({
     },
 
     async loadedGraphNode(node) {
-        if (node.comfyClass !== "PixelForge") return;
+        // Handle both Resolution Selector and Resize Image nodes
+        if (node.comfyClass !== "PixelForge" && node.comfyClass !== "PixelForgeResizeImage") return;
 
-        console.log("PixelForge: loadedGraphNode called");
+        console.log("PixelForge: loadedGraphNode called for", node.comfyClass);
 
         // Re-trigger the same logic when a node is loaded
         const aspectWidget = node.widgets.find(w => w.name === "aspect_ratio");
