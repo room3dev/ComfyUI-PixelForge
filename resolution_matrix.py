@@ -32,7 +32,7 @@ class PixelForge:
                     {"default": "3:2"},
                 ),
                 "orientation": (
-                    ["landscape", "portrait"],
+                    ["landscape", "portrait", "square"],
                     {"default": "landscape"},
                 ),
                 "divisible_by": (

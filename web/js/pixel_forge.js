@@ -51,6 +51,12 @@ app.registerExtension({
 
             console.log("PixelForge: updateResolutions called with:", { aspect, orientation, div, maxMp });
 
+            // Auto-select "square" orientation for 1:1 aspect ratio
+            if (aspect === "1:1" && orientationWidget && orientation !== "square") {
+                orientationWidget.value = "square";
+                console.log("PixelForge: Auto-selected square orientation for 1:1 ratio");
+            }
+
             const ratio = ASPECT_RATIOS[aspect];
             if (!ratio) {
                 console.error("PixelForge: Invalid aspect ratio:", aspect);
@@ -70,7 +76,10 @@ app.registerExtension({
 
                 if (total > maxPixels) break;
 
-                if (orientation === "portrait") {
+                // For square aspect ratio (1:1), orientation doesn't matter
+                // For portrait, swap dimensions
+                const currentOrientation = orientationWidget ? orientationWidget.value : orientation;
+                if (currentOrientation === "portrait" && aspect !== "1:1") {
                     [w, h] = [h, w];
                 }
 
