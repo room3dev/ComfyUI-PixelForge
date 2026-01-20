@@ -46,9 +46,13 @@ class PixelForge:
                     ["1 MP", "2 MP", "4 MP", "6 MP", "8 MP", "12 MP", "16 MP"],
                     {"default": f"{cls._last_max_mp} MP"},
                 ),
-                "resolution": ("STRING", {"default": "1024×1024"}),
+                "resolution": (resolutions,),
             }
         }
+
+    @classmethod
+    def VALIDATE_INPUTS(cls, **kwargs):
+        return True
 
     RETURN_TYPES = ("INT", "INT", "INT", "INT", "STRING", "FLOAT")
     RETURN_NAMES = (
