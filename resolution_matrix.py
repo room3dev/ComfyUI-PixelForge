@@ -29,11 +29,11 @@ class PixelForge:
             "required": {
                 "aspect_ratio": (
                     list(cls.ASPECT_RATIOS.keys()),
-                    {"default": "3:2"},
+                    {"default": "1:1"},
                 ),
                 "orientation": (
                     ["landscape", "portrait", "square"],
-                    {"default": "landscape"},
+                    {"default": "square"},
                 ),
                 "divisible_by": (
                     [16, 32, 64],
@@ -41,7 +41,7 @@ class PixelForge:
                 ),
                 "max_megapixels": (
                     ["1 MP", "2 MP", "4 MP", "6 MP", "8 MP", "12 MP", "16 MP"],
-                    {"default": "4 MP"},
+                    {"default": "1 MP"},
                 ),
                 "resolution": (all_resolutions, {"default": "1024×1024"}),
             }

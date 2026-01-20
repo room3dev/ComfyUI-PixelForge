@@ -40,11 +40,11 @@ class PixelForgeResizeImage:
                 # Resolution Matrix parameters
                 "aspect_ratio": (
                     list(cls.ASPECT_RATIOS.keys()),
-                    {"default": "3:2"},
+                    {"default": "1:1"},
                 ),
                 "orientation": (
                     ["landscape", "portrait", "square"],
-                    {"default": "landscape"},
+                    {"default": "square"},
                 ),
                 "divisible_by": (
                     [16, 32, 64],
@@ -52,14 +52,14 @@ class PixelForgeResizeImage:
                 ),
                 "max_megapixels": (
                     ["1 MP", "2 MP", "4 MP", "6 MP", "8 MP", "12 MP", "16 MP"],
-                    {"default": "4 MP"},
+                    {"default": "1 MP"},
                 ),
                 "resolution": (all_resolutions, {"default": "1024×1024"}),
                 # KJ Resize v2 parameters
                 "upscale_method": (cls.upscale_methods, {"default": "lanczos"}),
                 "keep_proportion": (
                     ["stretch", "resize", "pad", "pad_edge", "crop"],
-                    {"default": "stretch"}
+                    {"default": "crop"}
                 ),
                 "pad_color": ("STRING", {"default": "0, 0, 0", "tooltip": "RGB color for padding (e.g., '0, 0, 0' for black)"}),
                 "crop_position": (
