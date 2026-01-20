@@ -1,4 +1,8 @@
+import comfy.utils
+
 class PixelForge:
+    DESCRIPTION = "A ComfyUI node for selecting mathematically valid image resolutions filtered by aspect ratio, orientation, and megapixel limit."
+
     """
     PixelForge Resolution Matrix
     A ComfyUI node for selecting mathematically valid resolutions
@@ -109,6 +113,9 @@ class PixelForge:
             width, height = height, width
 
         total_mp = (width * height) / self.MP_BASE
+
+        pbar = comfy.utils.ProgressBar(1)
+        pbar.update(1)
 
         return (
             width,
